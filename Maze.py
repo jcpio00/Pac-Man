@@ -1,77 +1,108 @@
-import os
+
 import pygame
 
 
-# Nice class to hold a wall rect
+# initiate game
+pygame.init()
+
+# clock
+clock = pygame.time.Clock()
+
+# Colors
+Black = pygame.Color(0, 0, 0)         # Black
+White = pygame.Color(255, 255, 255)   # White
+Grey = pygame.Color(128, 128, 128)   # Grey
+Red = pygame.Color(255, 0, 0)       # Red
+
+# Set screen
+Width = 1200
+Height = 800
+Display = pygame.display.set_mode((Width, Height))
+pygame.display.set_caption("Pac-Man")
+Display.fill(Black)
+
+
+# Maze Limits
+def Limits():
+    X = 50
+    Y = 50
+    Wi = 1100
+    He = 700
+    pygame.draw.rect(Display, Red, (X, Y, Wi, He), 2)
+# Create wall
 
 
 class Wall(object):
 
     def __init__(self, pos):
         walls.append(self)
-        self.rect = pygame.Rect(pos[0], pos[1], 16, 16)
+        self.rect = pygame.Rect(pos[0], pos[1], 25, 25)
 
 
-# Initialise pygame
-os.environ["SDL_VIDEO_CENTERED"] = "1"
-pygame.init()
-
-# Set up the display
-pygame.display.set_caption("Maze")
-screen = pygame.display.set_mode((320, 240))
-
-clock = pygame.time.Clock()
-walls = []  # List to hold the walls
+# List to hold the walls
+walls = []
 
 
-# Holds the level layout in a list of strings.
-level = [
-    "WWWWWWWWWWWWWWWWWWWWW",
-    "W                   W",
-    "W         WWWWWWW   W",
-    "W   WWWW       W    W",
-    "W   W        WWWW W W",
-    "W WWW  WWWW        W",
-    "W   W     W W      W",
-    "W   W     W   WWW WW",
-    "W   WWW WWW   W W  W",
-    "W     W   W   W W  W",
-    "WWW   W   WWWWW W  W",
-    "W W      WW        W",
-    "W W   WWWW   WWW   W",
-    "W     W    E   W   W",
-    "WWWWWWWWWWWWWWWWWWWW",
-]
+class Maze():
+    # Holds the level layout in a list of strings.
+    level = [
+        "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+        "  WEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEW",
+        "  WEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWEW",
+        "  WEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWEW",
+        "  WEWWEEEEEEEWWEEEWWEEEEEEEEWWEEEWWEEEEEEEWWEW",
+        "  WEWWEWWWWWEWWEWEWWEWWWWWWEWWEWEWWEWWWWWEWWEW",
+        "  WEWWEEEEEEEWWEWEWWEWWWWWWEWWEWEWWEEEEEEEWWEW",
+        "  WEWWWWWWWWWWWEWEWWEWWEEWWEWWEWEWWWWWWWWWWWEW",
+        "  WEWWWWWWWWWWWEEEWWEWWEEWWEWWEEEWWWWWWWWWWWEW",
+        "  WEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWEW",
+        "  WEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWEW",
+        "  WEWWEEEEEEEEEEEWWEEWWWWWWEEWWEEEEEEEEEEEWWEW",
+        "  WEWWWWWWWWWWWWWWWEEWWWWWWEEWWEEEWWWWWWWWWWEW",
+        "  WEWWWWWWWWWWWWWWWEEWWWWWWEEWWEEEWWWWWWWWWWEW",
+        "  WEWWEEEEEEEEEEEWWEEWWWWWWEEWWEEEWWEEEEEEWWEW",
+        "  WEWWEEEEEEEEEEEWWEEWWWWWWEEWWEEEWWEEEEEEWWEW",
+        "  EEWWEEEEEEEEEEEWWEEEEEEEEEEWWEEEWWEEEEEEWWEE",
+        "  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+        "  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+        "  EEWWEEEEEEEEEWWEEWWEEWWEEWWEEWWEEEEEEEEEWWEE",
+        "  WEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWEW",
+        "  WEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWEW",
+        "  WEWWEEEEEEEEEWWEEWWEEWWEEWWEEWWEEEEEEEEEWWEW",
+        "  WEWWEEEEEEEEEWWEEWWEEWWEEWWEEWWEEEEEEEEEWWEW",
+        "  WEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWEW",
+        "  WEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWEW",
+        "  WEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEW",
+        "  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+    ]
 
 # Parse the level string above. W = wall, E = exit
 
-x = y = 0
-for row in level:
-    for col in row:
-        if col == "W":
-            Wall((x, y))
-        if col == "E":
-            end_rect = pygame.Rect(x, y, 16, 16)
-        x += 16
-    y += 16
-    x = 0
+    x = y = 50
+    for row in level:
+        for col in row:
+            if col == "W":
+                Wall((x, y))
+            if col == "E":
+                end_rect = pygame.Rect(x, y, 25, 25)
+            x += 25
+        y += 25
+        x = 0
 
-running = True
-while running:
-
-    clock.tick(60)
-
-    for e in pygame.event.get():
-        if e.type == pygame.QUIT:
-            running = False
-        if e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
-            running = False
-
-    # Draw the scene
-    screen.fill((0, 0, 0))
+# Draw the maze
     for wall in walls:
-        pygame.draw.rect(screen, (255, 255, 255), wall.rect)
+        pygame.draw.rect(Display, Grey, wall.rect)
     pygame.display.flip()
-    clock.tick(360)
+    
+State = True
+while State:
 
-pygame.quit()
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            State = False
+
+    Maze()
+    Limits()
+
+    pygame.display.update()
+    clock.tick(30)
