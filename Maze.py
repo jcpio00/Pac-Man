@@ -101,8 +101,7 @@ while State:
         if event.type == pygame.QUIT:
             State = False
 
-    Maze()
-    Limits()
+    #Limits()
 
     pygame.display.update()
     clock.tick(30)
