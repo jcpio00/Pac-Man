@@ -1,28 +1,34 @@
 import pygame
-import time
-
 pygame.init()
+vec = pygame.math.Vector2
 
-#BACKGROUND
-screen = pygame.display.set_mode((1000, 800))
 
-#TIMER
-clock = pygame.time.Clock()
+class Timer:
 
-counter, text = 120, '120'
-pygame.time.set_timer(pygame.USEREVENT, 1000)
-font = pygame.font.Font('freesansbold.ttf', 50)
+    def __init__(self):
+        self.screen = pygame.display.set_mode((300, 80))
+        self.clock = pygame.time.Clock()
+        self.counter = 120
+        self.text = '120'
+        self.userevent = pygame.USEREVENT
+        pygame.time.set_timer(pygame.USEREVENT, 1000)
+        self.font = pygame.font.Font('freesansbold.ttf', 50)
+        self.run_timer()
 
-running = True
-while running:
-    for e in pygame.event.get():
-        if e.type == pygame.USEREVENT :
-            counter -= 1
-            text = str(counter) if counter > 0 else "Game Over"
-        if e.type == pygame.QUIT:
-            running = False
+    def run_timer(self):
+        running = True
+        while running:
+            for e in pygame.event.get():
+                if e.type == pygame.USEREVENT:
+                    self.counter -= 1
+                    self.text = str(self.counter) if self.counter > 0 else "End"
+                if e.type == pygame.QUIT:
+                    running = False
 
-    screen.fill((0, 0, 0))
-    screen.blit(font.render("Time: " + text, True, (205, 255, 54)), (10, 10))
-    pygame.display.flip()
-    clock.tick(60)
+            self.screen.fill((0, 0, 0))
+            self.screen.blit(self.font.render("Time: " + self.text, True, (205, 255, 54)), (10, 10))
+            pygame.display.flip()
+            self.clock.tick(60)
+
+
+Timer()
