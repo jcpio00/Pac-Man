@@ -3,6 +3,7 @@ import pygame, sys
 from player_class import *
 from settings import *
 from timer import *
+from score import *
 
 pygame.init()
 vec = pygame.math.Vector2
@@ -23,6 +24,7 @@ class App:
         # Imports
         self.player = Player(self, player_starting_position)
         self.timer = Timer()
+        self.score = Score()
 
 
     def run(self):
@@ -79,6 +81,7 @@ class App:
         self.draw_grid()
         self.player.draw()
         self.draw_timer()
+        self.draw_score()
         pygame.display.update()
 
 
@@ -97,6 +100,9 @@ class App:
 
     def draw_timer(self):
         self.screen.blit(self.timer.font.render("Time: " + self.timer.text, True, (205, 255, 54)), (10, 10))
+
+    def draw_score(self):
+        self.screen.blit(self.score.font.render("Score: " + self.score.text, True, (205, 255, 54)), (10, 55))
 
     
 
