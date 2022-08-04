@@ -1,5 +1,6 @@
 
-import pygame, sys
+import pygame
+from settings import *
 
 
 pygame.init()
@@ -8,18 +9,35 @@ pygame.init()
 class Timer:
 
     def __init__(self):
+        #12100
         self.counter = 12100
         self.text = str(self.counter//100)
-        #self.event = pygame.USEREVENT + 0
-        #pygame.time.set_timer(self.event, 1000)
-        self.font = pygame.font.Font('freesansbold.ttf', 50)
+        self.font = pygame.font.Font(arcade, 30)
         
         
     def run_timer(self):
-        #for e in pygame.event.get():
-            #if e.type == self.event:
-        self.counter -= 1
-        self.text = str(self.counter//100) if self.counter//100 > 0 else "End"          
+        if self.counter//100 > 0:
+            self.counter -= 1
+            self.text = str(self.counter//100)
+        else:
+            self.text = "TIME'S UP"
+                
 
-            
+    def times_up(self):
+        return self.text == "TIME'S UP"
+    
 
+    def times_up_delay(self):
+        event = pygame.USEREVENT 
+        pygame.time.set_timer(event, 1000)
+        
+        delay = 2
+        while delay > 0:
+            for e in pygame.event.get():
+                if e.type == pygame.USEREVENT:
+                    delay -= 1
+
+        
+    def timer_reset(self):
+        self.counter = 12100
+        self.text = str(self.counter//100)
