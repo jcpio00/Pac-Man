@@ -4,7 +4,9 @@ import sys
 from player_class import *
 from settings import *
 from timer import *
-from score import * 
+from score import *
+from walls_class import *
+
 
 pygame.init()
 vec = pygame.math.Vector2
@@ -32,6 +34,45 @@ class App:
         self.player = Player(self, player_starting_pos)
         self.timer = Timer()
         self.score = Score()
+
+        # Maze
+        self.level = 1
+        self.walls_list = []
+        self.walls_list_isFull = False
+        self.maze = [
+            "WWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+            "W            WW            W",
+            "W WWW WWWWWW WW WWWWWW WWW W",
+            "W WWW WWWWWW WW WWWWWW WWW W",
+            "W WWW WWWWWW WW WWWWWW WWW W",
+            "W WWW WWWWWW WW WWWWWW WWW W",
+            "W                          W",
+            "W WWW WW WWWWWWWWWW WW WWW W",
+            "W WWW WW WWWWWWWWWW WW WWW W",
+            "W     WW     WW     WW     W",
+            "WWWWW WWWWWW WW WWWWWW WWWWW",
+            "    W WWWWWW WW WWWWWW W    ",
+            "    W WW            WW W    ",
+            "    W WW WWWWWWWWWW WW W    ",
+            "WWWWW WW W        W WW WWWWW",
+            "         W        W         ",
+            "WWWWW WW W        W WW WWWWW",
+            "    W WW WWWWWWWWWW WW W    ",
+            "    W WW            WW W    ",
+            "    W WW WWWWWWWWWW WW W    ",
+            "WWWWW WW WWWWWWWWWW WW WWWWW",
+            "W            WW            W",
+            "W WWW WWWWWW WW WWWWWW WWW W",
+            "W WWW WWWWWW WW WWWWWW WWW W",
+            "W  WW                  WW  W",
+            "WW WW WW WWWWWWWWWW WW WW WW",
+            "WW WW WW WWWWWWWWWW WW WW WW",
+            "W     WW     WW     WW     W",
+            "W WWWWWWWWWW WW WWWWWWWWWW W",
+            "W                          W",
+            "WWWWWWWWWWWWWWWWWWWWWWWWWWWW"
+        ]
+
 
 
 ############################# Core ##############################
@@ -84,6 +125,9 @@ class App:
 ########################### Playing Functions ###########################
                 
     def playing_events(self):
+        self.generate_walls(self.maze)
+        self.collision_detection()
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
@@ -123,15 +167,21 @@ class App:
 
         # Helper
         self.draw_grid()
+        #self.player.draw()
 
-        """TEMP"""
-        self.test_collision()
+        """The generate walls functions should only be called in playing_draw
+          if you want to make walls visible, otherwise it should be called in
+          playing_events, dont forget to uncomment pygame.draw.rect in
+          generate_walls before calling here and to comment out generate_walls
+          in the playing_events and vice versa"""
+        #self.generate_walls(self.maze)
+        
 
         # Draw Items
         self.player.group.draw(self.screen)
-        #self.player.draw()
         self.draw_timer()
         self.draw_score()
+        
         
         # Update
         pygame.display.update()
@@ -199,6 +249,7 @@ class App:
         for y in range(height// self.cell_height):
             pygame.draw.line(self.bg_img, grey, (0, y * self.cell_height),  # (0, y * self.cell_height)
                             (width, y * self.cell_height)) # (width, y * self.cell_height)
+         
 
 ############################ Draw Functions ###########################
 
@@ -225,9 +276,8 @@ class App:
     def draw_score(self):
         self.screen.blit(self.score.font.render("Score: " + self.score.text, True, white), (250, 5))
 
-
         
-############################## Helper Functions ##########################
+############################## Helper Functions #############################
 
     def reset(self, state = "start"):
         
@@ -250,21 +300,7 @@ class App:
         chime = mixer.Sound(path + "\ogg files\pause_chime.ogg")
         chime.play()
 
-
-    def test_collision(self):
-        #place = ((125 - top_bottom_buffer + self.cell_width//2)// self.cell_width + 1, (425 - top_bottom_buffer + self.cell_height//2)//self.cell_height + 1)
-        obstacle = pygame.Rect(125, 425, 20, 20)
-        pygame.draw.rect(self.screen, red, obstacle)
-
-        if self.player.sprite.hitbox.colliderect(obstacle):
-            pygame.draw.rect(self.screen, white, self.player.sprite.hitbox, 1)
-            #self.player.direction = still
-
-        #if self.player.grid_pos[0] + self.player.direction[0] == place[0] and self.player.grid_pos[1] + self.player.direction[1] == place[1]:
-        #    pass
-
-            
-
+    
 ############################### Load Functions ###############################
             
     def load_background(self):
@@ -279,3 +315,68 @@ class App:
         pac_man_art = pygame.image.load(path + "\png files\pac-man-promotional-art.png")
         pac_man_art = pygame.transform.scale(pac_man_art, (100, 100))
         self.screen.blit(pac_man_art, (500, 125))
+
+        
+############################# Gameplay Functions ##########################
+        
+    def collision_detection(self):
+        for wal in self.walls_list:
+            if self.player.sprite.rect.colliderect(wal):
+                # Uncomment this to see player hitbox
+                # pygame.draw.rect(self.screen, white, self.player.sprite.rect, 1)
+
+                if self.player.direction == right:
+                    self.player.sprite.rect.right = wal.left
+                    self.player.pix_pos = self.player.last_location
+                    self.player.direction = still
+                    self.player.stored_direction = still
+                    break
+                if self.player.direction == left:
+                    self.player.sprite.rect.left = wal.right
+                    self.player.pix_pos = self.player.last_location
+                    self.player.direction = still
+                    self.player.stored_direction = still
+                    break
+                if self.player.direction == up:
+                    self.player.sprite.rect.top = wal.bottom
+                    self.player.pix_pos = self.player.last_location
+                    self.player.direction = still
+                    self.player.stored_direction = still
+                    break
+                if self.player.direction == down:
+                    self.player.sprite.rect.bottom = wal.top
+                    self.player.pix_pos = self.player.last_location
+                    self.player.direction = still
+                    self.player.stored_direction = still
+                    break
+
+
+    def generate_walls(self, maze):
+        # test coords - (125, 425)
+        x = 25
+        y = 25
+        
+        for line in maze:
+            for char in line:
+                if char == "W":
+                    curr_wall = Walls((x, y))
+                    
+                    if not self.walls_list_isFull:
+                        self.walls_list.append(curr_wall.wall)
+
+                    # Uncomment this to make invisible walls visible    
+                    #pygame.draw.rect(self.screen, white, curr_wall.wall)
+
+                if x + 20 <= 575: 
+                    x += 20
+                else:
+                    x = 25
+
+            if y + 20 <= 635:
+                y += 20
+
+            else:
+                y = 25
+
+        self.walls_list_isFull = True
+        
