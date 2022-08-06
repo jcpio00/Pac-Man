@@ -16,6 +16,7 @@ class Player:
         self.pix_pos = self.get_pix_pos()
         self.direction = left
         self.stored_direction = None
+        self.last_location = self.get_pix_pos()
         
         # Player Sprite
         self.sprite = Pacman_Sprite()
@@ -47,7 +48,6 @@ class Player:
 
         # Pac-Man sprite
         self.sprite.rect.center = (int(self.pix_pos.x), int(self.pix_pos.y))
-        self.sprite.hitbox.center = self.sprite.rect.center
 
         
     def draw(self):
@@ -81,12 +81,16 @@ class Player:
     def time_to_move(self):
         # Checks if Pac-Man is in center of cell 
         if int(self.pix_pos.x + top_bottom_buffer//2) % self.app.cell_width == 0:
+            self.last_location = self.get_pix_pos()
+            
             # If so and direction is pressed then he is allowed to move
-            if self.direction == right or self.direction == left:
+            if self.direction == right or self.direction == left or self.direction == still:
                 return True
 
         if int(self.pix_pos.y + top_bottom_buffer//2) % self.app.cell_width == 0:
-            if self.direction == up or self.direction == down:
+            self.last_location = self.get_pix_pos()
+            
+            if self.direction == up or self.direction == down or self.direction == still:
                 return True
             
 
@@ -107,7 +111,7 @@ class Player:
 ######################### Helper Functions ##############################
 
     def player_reset(self):
-        self.grid_pos = vec(14, 22)
+        self.grid_pos = vec(13, 24)
         self.pix_pos = self.get_pix_pos()
         self.stored_direction = None
         self.direction = left
@@ -122,7 +126,8 @@ class Pacman_Sprite(pygame.sprite.Sprite):
         # Sprites
         self.image = pygame.image.load(path + "\png files\pacman_standard.png")
         self.rect = self.image.get_rect()
-        self.hitbox = self.rect.inflate(2, 2)
+
+
     
     
     

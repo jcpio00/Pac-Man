@@ -14,7 +14,7 @@ maze_width , maze_height = width - top_bottom_buffer, height - top_bottom_buffer
 
 
 # player settings
-player_starting_pos = vec(14, 22)
+player_starting_pos = vec(13, 24)
 
 
 # controls
