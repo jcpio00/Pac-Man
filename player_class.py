@@ -14,6 +14,7 @@ class Player:
         self.app = app
         self.grid_pos = pos
         self.pix_pos = self.get_pix_pos()
+        self.lives = 2
         self.direction = left
         self.stored_direction = None
         self.last_location = self.get_pix_pos()
@@ -24,7 +25,7 @@ class Player:
         self.group.add(self.sprite)
 
         # Sound effects
-        self.waka = mixer.Sound(path + "\ogg files\waka waka.ogg")
+        self.waka = mixer.Sound(path + "\ogg files\waka_waka.ogg")
         
         
 ########################### Essentials ########################
@@ -113,6 +114,7 @@ class Player:
     def player_reset(self):
         self.grid_pos = vec(13, 24)
         self.pix_pos = self.get_pix_pos()
+        self.lives = 2
         self.stored_direction = None
         self.direction = left
 
@@ -126,20 +128,5 @@ class Pacman_Sprite(pygame.sprite.Sprite):
         # Sprites
         self.image = pygame.image.load(path + "\png files\pacman_standard.png")
         self.rect = self.image.get_rect()
-
-
-    
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
+        
+        

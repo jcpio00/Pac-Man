@@ -9,8 +9,8 @@ pygame.init()
 class Timer:
 
     def __init__(self):
-        #12100
-        self.counter = 12100
+        #20100
+        self.counter = 1000
         self.text = str(self.counter//100)
         self.font = pygame.font.Font(arcade, 30)
         
@@ -39,5 +39,5 @@ class Timer:
 
         
     def timer_reset(self):
-        self.counter = 12100
+        self.counter = 20100
         self.text = str(self.counter//100)

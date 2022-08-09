@@ -4,9 +4,13 @@ import sys
 from player_class import *
 from settings import *
 from timer import *
-from score import *
 from walls_class import *
+from pellets_class import *
 
+"""TOO DO"""
+# soft reset for death occurence
+# animation
+# start chime
 
 pygame.init()
 vec = pygame.math.Vector2
@@ -21,10 +25,25 @@ class App:
         self.clock = pygame.time.Clock()
         self.start_delayed_played = False
 
-        #Files
+        ###### Files #####
+
+        # Music
         mixer.music.load(path + "\ogg files\Pac-man-theme-remix.ogg")
         mixer.music.play(-1)
+
+        # Chimes
+        self.pause_chime = mixer.Sound(path + "\ogg files\pause_chime.ogg")
+        self.game_over_chime = mixer.Sound(path + "\ogg files\game_over_chime.ogg")
+        self.game_over_chime_played = False
+        
+        # Images
         self.bg_img = pygame.image.load(path + "\png files\maze_background.png")
+        self.logo = pygame.image.load(path + "\png files\pacman_start_screen.png")
+        self.pellet = pygame.image.load(path + "\png files\pellet.png")
+        self.super_pellet = pygame.image.load(path + "\png files\super_pellet.png")
+        self.lives_image = pygame.image.load(path + "\png files\pacman_standard.png")
+
+        ####################
         
         # Maze cells
         self.cell_width = maze_width //28
@@ -33,47 +52,54 @@ class App:
         # Imports
         self.player = Player(self, player_starting_pos)
         self.timer = Timer()
-        self.score = Score()
 
         # Maze
+        self.score = 0
+        self.last_score = 0
         self.level = 1
         self.walls_list = []
-        self.walls_list_isFull = False
+        self.pellets_list = []
+        self.pellet_count = 0
+        self.pellets_counted = False
+        self.generated_walls = False
+        self.generated_pellets = False
         self.maze = [
             "WWWWWWWWWWWWWWWWWWWWWWWWWWWW",
-            "W            WW            W",
-            "W WWW WWWWWW WW WWWWWW WWW W",
-            "W WWW WWWWWW WW WWWWWW WWW W",
-            "W WWW WWWWWW WW WWWWWW WWW W",
-            "W WWW WWWWWW WW WWWWWW WWW W",
-            "W                          W",
-            "W WWW WW WWWWWWWWWW WW WWW W",
-            "W WWW WW WWWWWWWWWW WW WWW W",
-            "W     WW     WW     WW     W",
-            "WWWWW WWWWWW WW WWWWWW WWWWW",
-            "    W WWWWWW WW WWWWWW W    ",
-            "    W WW            WW W    ",
-            "    W WW WWWWWWWWWW WW W    ",
-            "WWWWW WW W        W WW WWWWW",
-            "         W        W         ",
-            "WWWWW WW W        W WW WWWWW",
-            "    W WW WWWWWWWWWW WW W    ",
-            "    W WW            WW W    ",
-            "    W WW WWWWWWWWWW WW W    ",
-            "WWWWW WW WWWWWWWWWW WW WWWWW",
-            "W            WW            W",
-            "W WWW WWWWWW WW WWWWWW WWW W",
-            "W WWW WWWWWW WW WWWWWW WWW W",
-            "W  WW                  WW  W",
-            "WW WW WW WWWWWWWWWW WW WW WW",
-            "WW WW WW WWWWWWWWWW WW WW WW",
-            "W     WW     WW     WW     W",
-            "W WWWWWWWWWW WW WWWWWWWWWW W",
-            "W                          W",
+            "WPPPPPPPPPPPPWWPPPPPPPPPPPPW",
+            "WPWWWPWWWWWWPWWPWWWWWWPWWWPW",
+            "WSWWWPWWWWWWPWWPWWWWWWPWWWSW",
+            "WPWWWPWWWWWWPWWPWWWWWWPWWWPW",
+            "WPWWWPWWWWWWPWWPWWWWWWPWWWPW",
+            "WPPPPPPPPPPPPPPPPPPPPPPPPPPW",
+            "WPWWWPWWPWWWWWWWWWWPWWPWWWPW",
+            "WPWWWPWWPWWWWWWWWWWPWWPWWWPW",
+            "WPPPPPWWPPPPPWWPPPPPWWPPPPPW",
+            "WWWWWPWWWWWW WW WWWWWWPWWWWW",
+            "    WPWWWWWW WW WWWWWWPW    ",
+            "    WPWW            WWPW    ",
+            "    WPWW WWWWWWWWWW WWPW    ",
+            "WWWWWPWW W        W WWPWWWWW",
+            "     P   W        W   P     ",
+            "WWWWWPWW W        W WWPWWWWW",
+            "    WPWW WWWWWWWWWW WWPW    ",
+            "    WPWW            WWPW    ",
+            "    WPWW WWWWWWWWWW WWPW    ",
+            "WWWWWPWW WWWWWWWWWW WWPWWWWW",
+            "WPPPPPPPPPPPPWWPPPPPPPPPPPPW",
+            "WPWWWPWWPWWWPWWPWWWPWWPWWWPW",
+            "WPWWWPWWPWWWPWWPWWWPWWPWWWPW",
+            "WSPWWPPPPPPPP  PPPPPPPPWWPSW",
+            "WWPWWPWWPWWWWWWWWWWPWWPWWPWW",
+            "WWPWWPWWPWWWWWWWWWWPWWPWWPWW",
+            "WPPPPPWWPPPPPWWPPPPPWWPPPPPW",
+            "WPWWWWWWWWWWPWWPWWWWWWWWWWPW",
+            "WPPPPPPPPPPPPPPPPPPPPPPPPPPW",
             "WWWWWWWWWWWWWWWWWWWWWWWWWWWW"
         ]
 
-
+        
+        # TEST
+        
 
 ############################# Core ##############################
 
@@ -89,6 +115,9 @@ class App:
             elif self.state == "game over":
                 self.game_over_events()
                 self.game_over_draw()
+            elif self.state == "win":
+                self.win_events()
+                self.win_draw()
             else:
                 self.running = False
         
@@ -115,7 +144,7 @@ class App:
         
         if not self.start_delayed_played:
             self.start_delayed_played = True
-            pygame.time.delay(850)
+            pygame.time.delay(820)
         
         self.screen.fill(black)
         self.draw_start_screen()
@@ -125,7 +154,10 @@ class App:
 ########################### Playing Functions ###########################
                 
     def playing_events(self):
-        self.generate_walls(self.maze)
+        if not self.generated_walls:
+            self.generate_walls(self.maze)
+            self.generated_walls = True
+
         self.collision_detection()
         
         for event in pygame.event.get():
@@ -141,17 +173,17 @@ class App:
                 if event.key == pygame.K_DOWN:
                     self.player.move(down)
                 if event.key == pygame.K_SPACE:
-                    self.play_pause_chime()
+                    self.pause_chime.play()
                     self.pause()
 
 
     def playing_update(self):
-        if self.timer.times_up():
-            self.timer.times_up_delay()
-            self.state = "game over"
-        else:
-            self.timer.run_timer()
+        self.game_over_checker()
         
+        if self.pellet_count == 0 and self.pellets_counted:
+            self.timer.times_up_delay()
+            self.state = "win"
+            
         self.player.update()
                     
 
@@ -166,22 +198,18 @@ class App:
         self.load_background()
 
         # Helper
-        self.draw_grid()
+        #self.draw_grid()
         #self.player.draw()
 
-        """The generate walls functions should only be called in playing_draw
-          if you want to make walls visible, otherwise it should be called in
-          playing_events, dont forget to uncomment pygame.draw.rect in
-          generate_walls before calling here and to comment out generate_walls
-          in the playing_events and vice versa"""
-        #self.generate_walls(self.maze)
+        # Generate
+        self.generate_pellets(self.maze)
         
-
         # Draw Items
         self.player.group.draw(self.screen)
         self.draw_timer()
         self.draw_score()
-        
+        self.draw_lives()
+
         
         # Update
         pygame.display.update()
@@ -202,7 +230,7 @@ class App:
                     if event.key == pygame.K_SPACE:
                         paused = False
                         mixer.music.pause()
-                        self.play_pause_chime()
+                        self.pause_chime.play()
 
                     elif event.key == pygame.K_q:
                         paused = False
@@ -233,9 +261,41 @@ class App:
             self.screen.fill(black)
             pygame.display.update()
             return
+
+        if self.state == "playing":
+            self.game_over_chime.stop()
+            return
         
         self.screen.fill(black)
         self.draw_game_over()
+
+        if not self.game_over_chime_played:
+            self.game_over_chime.play()
+            self.game_over_chime_played = True
+            
+        pygame.display.update()
+
+
+############################## Win Functions ###################################
+    
+    def win_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    self.reset()
+                if event.key == pygame.K_SPACE:
+                    self.reset("playing")
+
+    def win_draw(self):
+        if self.state == "start":
+            self.screen.fill(black)
+            pygame.display.update()
+            return
+        
+        self.screen.fill(black)
+        self.draw_win()
         pygame.display.update()
 
 
@@ -262,19 +322,32 @@ class App:
         self.screen.blit(pygame.font.Font(classic, 25).render("Press  Q  to  quit", True, white), quit_text)
         
     def draw_game_over(self):
-        self.screen.blit(pygame.font.Font(classic, 50).render("GAME OVER", True, red), game_over_center)
+        self.screen.blit(pygame.font.Font(classic, 50).render("GAME OVER!", True, red), game_over_center)
         self.screen.blit(pygame.font.Font(classic, 25).render("Press  the  spacebar  to  play again", True, white), play_again_text)
         self.screen.blit(pygame.font.Font(classic, 25).render("Press  Q  to  quit", True, white), game_over_quit)
 
 
     def draw_start_screen(self):
-        self.load_pacman_logo()
-        self.screen.blit(pygame.font.Font(classic, 25).render("Push  the  Spacebar  to  Play", True, white), start_text)
-        self.screen.blit(pygame.font.Font(classic, 25).render("Press  Q  to  exit", True, white), start_exit_text)
+        self.screen.blit(self.logo, (0, 0))
         
 
     def draw_score(self):
-        self.screen.blit(self.score.font.render("Score: " + self.score.text, True, white), (250, 5))
+        self.screen.blit(pygame.font.Font(arcade, 30).render("Score: " + str(self.score), True, white), (250, 5))
+
+
+    def draw_lives(self):
+        x = 500
+
+        for i in range(1, self.player.lives+1):
+            self.screen.blit(self.lives_image, (x, 5))
+            x += 20
+
+
+    def draw_win(self):
+        self.screen.blit(pygame.font.Font(classic, 50).render("YOU  WIN!", True, player_color), game_over_center)
+        self.screen.blit(pygame.font.Font(classic, 25).render("Press  the  spacebar  to  play again", True, white), play_again_text)
+        self.screen.blit(pygame.font.Font(classic, 25).render("Press  Q  to  quit", True, white), game_over_quit)
+        
 
         
 ############################## Helper Functions #############################
@@ -291,35 +364,50 @@ class App:
         self.start_delayed_played = False
         self.state = state
 
+        # Maze Reset
+        self.score = 0
+        self.last_score = 0
+        self.pellet_count = 0
+        self.pellets_list.clear()
+        self.walls_list.clear()
+        self.generated_walls = False
+        self.generated_pellets = False
+        self.pellets_counted = False
+
+        # Start Music Reset         
         if self.state == "start":
             mixer.music.load(path + "\ogg files\Pac-man-theme-remix.ogg")
             mixer.music.play(-1)
-            
 
-    def play_pause_chime(self):
-        chime = mixer.Sound(path + "\ogg files\pause_chime.ogg")
-        chime.play()
-
+        # Other Reset
+        self.game_over_chime_played = False
+        
+        
     
 ############################### Load Functions ###############################
             
     def load_background(self):
-        self.bg_img = pygame.transform.scale(self.bg_img, (maze_width, maze_height))
         self.screen.blit(self.bg_img, (width//2 - maze_width//2, height//2 - maze_height//2))
-
-
-    def load_pacman_logo(self):
-        logo = pygame.image.load(path + "\png files\pac-man-logo.png")
-        logo = pygame.transform.scale(logo, (400, 125))
-        self.screen.blit(logo, (100, 100))
-        pac_man_art = pygame.image.load(path + "\png files\pac-man-promotional-art.png")
-        pac_man_art = pygame.transform.scale(pac_man_art, (100, 100))
-        self.screen.blit(pac_man_art, (500, 125))
 
         
 ############################# Gameplay Functions ##########################
+
+    def game_over_checker(self):
+         
+        if self.timer.times_up():
+            self.timer.times_up_delay()
+            self.state = "game over"
+        else:
+             self.timer.run_timer()
+
+        if self.player.lives == 0:
+            self.state = "game over"
+
+            
         
     def collision_detection(self):
+
+        # Wall Collision
         for wal in self.walls_list:
             if self.player.sprite.rect.colliderect(wal):
                 # Uncomment this to see player hitbox
@@ -351,7 +439,25 @@ class App:
                     break
 
 
+        # Pellet and Super Pellet Collision
+        # Pellet count and Score updater
+        for pel in self.pellets_list:
+            if self.player.grid_pos == pel.grid_pos:
+                if not pel.value_added:
+                    pel.eaten = True
+                    self.pellet_count -= 1 
+                    self.player.waka.play()
+                    self.score += pel.value
+                    pel.value_added = True
+
+                    if self.score == self.last_score + 2000:
+                        self.player.lives += 1 if self.player.lives < 3 else 0
+                        self.last_score += 2000
+
+
+
     def generate_walls(self, maze):
+        
         # test coords - (125, 425)
         x = 25
         y = 25
@@ -360,11 +466,9 @@ class App:
             for char in line:
                 if char == "W":
                     curr_wall = Walls((x, y))
-                    
-                    if not self.walls_list_isFull:
-                        self.walls_list.append(curr_wall.wall)
+                    self.walls_list.append(curr_wall.wall)
 
-                    # Uncomment this to make invisible walls visible    
+                    # Uncomment this to make invisible walls visible and call in playing_draw   
                     #pygame.draw.rect(self.screen, white, curr_wall.wall)
 
                 if x + 20 <= 575: 
@@ -378,5 +482,60 @@ class App:
             else:
                 y = 25
 
-        self.walls_list_isFull = True
+
+    def generate_pellets(self, maze):
+
+        # Initial State
+        # Generates and figures out how many pellets there are
+        if not self.generated_pellets:
+            x = 25
+            y = 25
+            
+            for line in maze:
+                for char in line:
+                    if char == "P":
+                        curr_pell = Pellets((x, y))
+                        curr_pell.draw_pellet(self.screen, self.pellet)
+                        self.pellets_list.append(curr_pell)
+                        self.pellet_count += 1
+
+                    elif char == "S":
+                        curr_sup = Super_Pellets((x, y))
+                        curr_sup.draw_super_pellet(self.screen, self.super_pellet)
+                        self.pellets_list.append(curr_sup)
+                        self.pellet_count += 1
+                        
+                    if x + 20 <= 575: 
+                        x += 20
+                    else:
+                        x = 25
+
+                if y + 20 <= 635:
+                    y += 20
+
+                else:
+                    y = 25
+
+            self.generated_pellets = True
+            self.pellets_counted = True
+    
+        # Playing State
+        else:
+            for pell in self.pellets_list:
+                if not pell.eaten:
+                    if pell.pellet_type() == "pellet":
+                        pell.draw_pellet(self.screen, self.pellet)
+
+                    else:
+                        pell.draw_super_pellet(self.screen, self.super_pellet)
+
+
+     
+
+
+
+
+
+        
+
         
