@@ -268,9 +268,7 @@ class App:
 
 
     def draw_start_screen(self):
-        self.load_pacman_logo()
-        self.screen.blit(pygame.font.Font(classic, 25).render("Push  the  Spacebar  to  Play", True, white), start_text)
-        self.screen.blit(pygame.font.Font(classic, 25).render("Press  Q  to  exit", True, white), start_exit_text)
+        self.load_pacman_start_screen()
         
 
     def draw_score(self):
@@ -308,13 +306,9 @@ class App:
         self.screen.blit(self.bg_img, (width//2 - maze_width//2, height//2 - maze_height//2))
 
 
-    def load_pacman_logo(self):
-        logo = pygame.image.load(path + "\png files\pac-man-logo.png")
-        logo = pygame.transform.scale(logo, (400, 125))
-        self.screen.blit(logo, (100, 100))
-        pac_man_art = pygame.image.load(path + "\png files\pac-man-promotional-art.png")
-        pac_man_art = pygame.transform.scale(pac_man_art, (100, 100))
-        self.screen.blit(pac_man_art, (500, 125))
+    def load_pacman_start_screen(self):
+        logo = pygame.image.load(path + "\png files\pacman_start_screen.png")
+        self.screen.blit(logo, (0, 0))
 
         
 ############################# Gameplay Functions ##########################
